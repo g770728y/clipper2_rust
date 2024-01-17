@@ -74,4 +74,6 @@ fn main() {
         // After MacOs Catalina, use libc++ instead
         println!("cargo:rustc-link-lib=dylib=c++"); // need to change this if targeting other platforms
     }
+
+    println!("cargo:rerun-if-changed=build.rs");
 }
