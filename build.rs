@@ -1,26 +1,29 @@
 use cmake::Config;
 
 fn main() {
-    let is_debug = std::env::var("PROFILE").unwrap() == "debug";
-
     // build Clipper2
-    let dst = Config::new("Clipper2/CPP")
-        .define("CLIPPER2_UTILS", "OFF")
-        .define("CLIPPER2_EXAMPLES", "OFF")
-        .define("CLIPPER2_TESTS", "OFF")
-        .define("CLIPPER2_USINGZ", "OFF")
-        .define("BUILD_SHARED_LIBS", "OFF")
-        .cxxflag("/EHsc")
-        .build();
+    let mut cmake_builder = Config::new("Clipper2/CPP");
+    cmake_builder.define("CLIPPER2_UTILS", "OFF");
+    cmake_builder.define("CLIPPER2_EXAMPLES", "OFF");
+    cmake_builder.define("CLIPPER2_TESTS", "OFF");
+    cmake_builder.define("CLIPPER2_USINGZ", "OFF");
+    cmake_builder.define("BUILD_SHARED_LIBS", "OFF");
+
+    #[cfg(target_os = "windows")]
+    cmake_builder.cxxflag("/EHsc");
+
+    let dst = cmake_builder.build();
 
     // build wrapper
     // 需要在系统环境变量中建两个变量：Library和Lib，打开visual studio，新建一个空项目，然后在项目属性>文件目录中复制这两个变量的内容
-    let mut build = cc::Build::new();
-    build
+    let mut cc_builder = cc::Build::new();
+    cc_builder
         .file("src/wrapper.cpp")
         .cpp(true)
-        .std("c++17")
-        .flag("-EHsc");
+        .std("c++17");
+
+    #[cfg(target_os = "windows")]
+    cc_builder.flag("-EHsc");
 
     #[cfg(all(target_os = "windows", debug_assertions))]
     {
@@ -40,8 +43,8 @@ fn main() {
         // 不太清楚为什么要使用 MDd，而不是 MTd，但是这里也是参考Clipper2
         build.flag("-MDd");
     }
-    build.include("Clipper2/CPP/Clipper2Lib/include");
-    build.compile("clipper2wrap");
+    cc_builder.include("Clipper2/CPP/Clipper2Lib/include");
+    cc_builder.compile("clipper2wrap");
 
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-lib=static=Clipper2");
