@@ -9,3 +9,6 @@ WIP rust bindings for Clipper2
 <img src="test_plots/3_xor_test.svg" width="150" />
 <img src="test_plots/4_offset_bunny.svg" width="150" />
 </span>
+
+cl开启debug
+/Od /D _DEBUG /Zi
